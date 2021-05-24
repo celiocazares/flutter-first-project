@@ -1,3 +1,4 @@
+import 'package:expenses/components/chart.dart';
 import 'package:expenses/components/transaction_form.dart';
 import 'package:flutter/material.dart';
 
@@ -7,6 +8,7 @@ import 'dart:math';
 import 'package:expenses/models/transaction.dart';
 import './components/transaction_form.dart';
 import './components/transaction_list.dart';
+import './components/chart.dart';
 
 main() => runApp(ExpensesApp());
 
@@ -20,12 +22,13 @@ class ExpensesApp extends StatelessWidget {
         fontFamily: 'Quicksand',
         appBarTheme: AppBarTheme(
           textTheme: ThemeData.light().textTheme.copyWith(
-                headline6: TextStyle(
-                  fontFamily: 'OpenSans',
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+              headline6: TextStyle(
+                fontFamily: 'OpenSans',
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
+              button:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         ),
       ),
     );
@@ -38,31 +41,32 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final List<Transaction>_transactions = [
-    // Transaction(
-    //     id: 't1',
-    //     title: 'Tênis nike',
-    //     productValue: 950.90,
-    //     date: DateTime.now()),
-    // Transaction(
-    //     id: 't2',
-    //     title: 'CSL Elite Pedals LC',
-    //     productValue: 3950.90,
-    //     date: DateTime.now()),
-  ];
+  final List<Transaction> _transactions = [];
 
-  _addTransaction(String title, double productValue) {
+  List<Transaction> get _recentTransactions {
+    return _transactions.where((tr) {
+      return tr.date.isAfter(DateTime.now().subtract(Duration(days: 7)));
+    }).toList();
+  }
+
+  _addTransaction(String title, double productValue, DateTime date) {
     final newTransaction = Transaction(
         id: Random().nextDouble().toString(),
         title: title,
         productValue: productValue,
-        date: DateTime.now());
+        date: date);
 
     setState(() {
       _transactions.add(newTransaction);
     });
 
     Navigator.of(context).pop();
+  }
+
+  _deleteTransaction(String id) {
+    setState(() {
+      _transactions.removeWhere((element) => element.id == id);
+    });
   }
 
   _openTransactionFormModal(BuildContext context) {
@@ -88,14 +92,8 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              child: Card(
-                color: Theme.of(context).primaryColor,
-                child: Text("Gráfico"),
-                elevation: 5,
-              ),
-            ),
-            TransactionList(_transactions)
+            Chart(_transactions),
+            TransactionList(_transactions, _deleteTransaction),
           ],
         ),
       ),
